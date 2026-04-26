@@ -1,0 +1,61 @@
+# ---------------------------------------------------------
+# Phase 5: Private Worker Service (Internal Only)
+# This service is NOT open to the internet.
+# ---------------------------------------------------------
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-private-service
+  namespace: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-private-service
+  template:
+    metadata:
+      labels:
+        app: my-private-service
+    spec:
+      containers:
+      - name: my-private-service
+        image: my-private-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: "postgres-postgresql.data.svc.cluster.local"
+        - name: DB_NAME
+          value: "appdb"
+        - name: DB_USER
+          value: "app"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: db-password
+        - name: KAFKA_HOST
+          value: "kafka.data.svc.cluster.local"
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: kafka-password
+---
+# INTERNAL SERVICE ONLY
+# No Ingress is defined for this service.
+# It is only reachable at http://my-private-service.apps.svc.cluster.local
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-private-service
+  namespace: apps
+spec:
+  selector:
+    app: my-private-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
