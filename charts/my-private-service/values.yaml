@@ -13,6 +13,6 @@ common-microservice:
     dbUser: "app"
     kafkaHost: "kafka.data.svc.cluster.local"
   probes:
-    enabled: true
+    enabled: false
   ingress:
     enabled: false
